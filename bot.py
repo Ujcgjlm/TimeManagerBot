@@ -2,10 +2,8 @@ from statistic import Statistic
 from telebot.async_telebot import AsyncTeleBot
 import asyncio
 import tools
-import pickle
 from collections import defaultdict
 from threading import Timer
-from apscheduler.schedulers.background import BackgroundScheduler
 
 
 bot = AsyncTeleBot(tools.TOKEN, parse_mode=None)
@@ -13,20 +11,9 @@ bot = AsyncTeleBot(tools.TOKEN, parse_mode=None)
 # dict [userId][statName] = statObj
 userData = defaultdict(dict)
 
-
-def Setup():
-    global userData
-    with open('data.pkl', 'rb') as inp:
-        userData = pickle.load(inp)
-    print(userData)
-
-
 async def UpdateHoursStat(userId, statName, minutes, backId):
     global userData
     userData[userId][statName].IncreaseStat(minutes)
-
-    with open('data.pkl', 'wb') as out:
-        pickle.dump(userData, out, protocol=pickle.HIGHEST_PROTOCOL)
 
     await bot.send_message(backId, text=statName + ' timer ended!')
 
@@ -70,9 +57,6 @@ async def CreateNewStatistic(message):
         return
 
     userData[message.from_user.id][args[0]] = Statistic(hours=0)
-    with open('data.pkl', 'wb') as out:
-        pickle.dump(userData, out, protocol=pickle.HIGHEST_PROTOCOL)
-
     await bot.send_message(message.chat.id, text='Succesfully added!')
 
 
@@ -90,9 +74,6 @@ async def CreateNewStatistic(message):
         return
 
     del userData[message.from_user.id][args[0]]
-    with open('data.pkl', 'wb') as out:
-        pickle.dump(userData, out, protocol=pickle.HIGHEST_PROTOCOL)
-
     await bot.send_message(message.chat.id, text='Succesfully deleted!')
 
 
@@ -108,6 +89,5 @@ async def Help(message):
 
 
 if __name__ == "__main__":
-    Setup()
     while True:
         asyncio.run(bot.polling())
